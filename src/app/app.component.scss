@@ -1,0 +1,65 @@
+nz-layout{
+    min-height: 100%;
+}
+nz-header{
+    background: #fff;
+    border-bottom: 1px solid #c8ced3;
+}
+nz-footer{
+    border-top: 1px solid #c8ced3;
+}
+router-outlet{
+   
+}
+nz-content{
+    // display: flex;
+    // flex-direction: column;
+}
+nz-sider{
+    // background: #2f353a;
+    // ul{
+    //     background: #2f353a;
+    // }
+    li{
+        margin-top: 0;
+    }
+}
+.logo{
+    margin: 0px!important;
+}
+.tit{
+    border-left: 3px solid #06bee7;
+    padding-left: 8px;
+    margin-bottom: 12px;
+}
+
+
+
+
+
+:host ::ng-deep .trigger {
+    font-size: 18px;
+    line-height: 64px;
+    padding: 0 24px;
+    cursor: pointer;
+    transition: color .3s;
+  }
+
+  :host ::ng-deep .trigger:hover {
+    color: #1890ff;
+  }
+
+  :host ::ng-deep .logo {
+    // 区域属性
+    height: 32px;
+    // background: rgba(255, 255, 255, .2);
+    margin: 16px;
+    // 文字属性
+    color: white;
+    text-align: center;
+    font-size: 1.2em;
+  }
+ .ulScrollY{
+     height: 874px;
+     overflow-y: scroll;
+  }

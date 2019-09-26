@@ -1,0 +1,25 @@
+<nz-layout>
+        <nz-page-header> 
+            <nz-page-header-title>项目分解-甘特图</nz-page-header-title>
+            <nz-page-header-subtitle>进度与计划</nz-page-header-subtitle>
+            
+            <nz-page-header-extra>
+                <button nz-button nzType="default" (click)="expandAll()">
+                        <i nz-icon type="{{isAllExpanded?'colum-height':'vertical-align-middle'}}"></i>{{isAllExpanded?"展开":"折叠"}}
+                </button>
+                <button nz-button nzType="default" (click)="changeScale('month')">
+                    <i nz-icon type="clock-circle"></i>月计划
+                </button>
+                <button nz-button nzType="default" (click)="changeScale('day')">
+                    <i nz-icon type="clock-circle"></i>日计划
+                </button>
+                <button nz-button nzType="primary" (click)="exportExcel()">
+                  <i nz-icon type="plus-circle"></i>导出（EXCEL）
+                </button>
+              </nz-page-header-extra>
+        </nz-page-header>
+    
+    <nz-content>
+        <div #gantt_here class='gantt-chart'></div>
+    </nz-content>
+</nz-layout>

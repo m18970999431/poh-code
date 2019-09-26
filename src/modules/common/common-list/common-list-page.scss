@@ -1,0 +1,32 @@
+nz-table{
+    background-color: #FAFAFA;
+    tbody{
+        background-color:#FFF;
+    }
+}
+
+// For Amaps Modal
+#panel{
+    height: 500px;
+    width: 300px;
+    top: 100px;
+    right: 50px;
+    position: absolute;
+    z-index: 65535;
+}
+ngx-amap{
+    width: 100%;
+    height: 450px;
+}
+::ng-deep .vertical-center-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+::ng-deep .vertical-center-modal .ant-modal {
+top: 0;
+}
+::ng-deep .vertical-center-modal .ant-modal-body {
+    padding: 5px!important;
+}

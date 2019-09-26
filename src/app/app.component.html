@@ -1,0 +1,68 @@
+<!-- NG-ZORRO -->
+<nz-layout>
+  <nz-sider nzCollapsible [(nzCollapsed)]="isCollapsed" [nzTrigger]="triggerTemplate">
+    <div style="background: #242d3a;height: 64px;width: 100%;padding: 16px">
+      <div class="logo">
+        <ng-container *ngIf="!isCollapsed">
+          <!-- <div *ngIf="appServ.title=='南昌大学学生社团信息管理系统'&&appServ.title=='学生社团信息管理系统'"> -->
+            <div *ngIf="appServ.title=='南昌大学学生社团信息管理系统'||appServ.title=='社团协会信息管理系统'" style="height: 100%;display: flex;margin:0 6px">
+
+              <img style="height: 100%;margin: 0 10px" src="../assets/img/ncdx/ncdxlogo.jpg" alt="">
+              <div style="font-size:11px;padding: 0 6px">
+                {{appServ.title}}
+              </div>
+            </div>
+            <ng-container *ngIf="appServ.title!='南昌大学学生社团信息管理系统'&&appServ.title!='社团协会信息管理系统'">
+                {{appServ.title}}
+            </ng-container>
+          <!-- </div> -->
+        </ng-container>
+      </div>
+    </div>
+    <ul style="overflow-y: hidden" nz-menu [nzTheme]="'dark'" [nzMode]="'inline'" [nzInlineCollapsed]="isCollapsed"
+      class="ulScrollY">
+      <ng-container *ngFor="let module of routing">
+        <ng-container *ngIf="appServ.hasAccessAuth(module)">
+
+          <li nz-submenu [nzOpen]="module.data.nzOpen" *ngIf="module.data.isShow != false">
+            <span title><i nz-icon [type]="module.data.icon?module.data.icon:'minus-circle'"></i><span
+                class="nav-text">{{module.data.title}}</span></span>
+            <ul>
+
+              <ng-container *ngFor="let route of module.data.subRoutes">
+                <ng-container *ngIf="route.title">
+                  <li *ngIf="!route.child" nz-menu-item routlin
+                    [nzSelected]="href== origin + (((module.path?'/'+module.path:'') + (route.path?'/'+route.path : ''))?((module.path?'/'+module.path:'') + (route.path?'/'+route.path : '')):'/')">
+                    <!-- <a title [routerLink]="getRouterLink(module,route)" [queryParams]="route.data?route.data:{}">{{route.title}}</a> -->
+                    <a title (click)="navToRoute(module,route)">{{route.title}}</a>
+                  </li>
+
+
+                  <li *ngIf="route.child" nz-submenu>
+                    <a title>{{route.title}}</a>
+                    <ul>
+                      <li *ngFor="let item of route.child" nz-menu-item [routerLink]="getRouterLink(module,item)">
+                        {{item.title}}</li>
+                    </ul>
+                  </li>
+
+                </ng-container>
+              </ng-container>
+            </ul>
+          </li>
+        </ng-container>
+      </ng-container>
+    </ul>
+  </nz-sider>
+  <nz-layout>
+    <nz-header style="background: #fff; padding:0;">
+      <i class="trigger" nz-icon [type]="isCollapsed?'menu-unfold':'menu-fold'" (click)="isCollapsed=!isCollapsed"></i>
+      <i class="trigger" style="float:right" nz-icon [type]="'poweroff'" (click)="appServ.logout()"></i>
+    </nz-header>
+    <nz-content style="margin: 16px">
+      <router-outlet></router-outlet>
+    </nz-content>
+  </nz-layout>
+</nz-layout>
+<ng-template #trigger>
+  <i nz-icon type="up"></i>

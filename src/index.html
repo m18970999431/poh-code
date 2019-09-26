@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Multi-Site HomePage Detect -->
+    <script>
+      var hostname = window.location.hostname;
+      var homePath = "/user/login";
+      var title = ""
+  
+      // IF:只有访问主页才判断入口
+      if(window.location.pathname == "/" || window.location.pathname == "/user/login"){
+        // 添加社团系统默认登录页
+        if (hostname == "orgadmin.hopecent.com") {
+          homePath = '/user/login-association';
+          title = "南昌大学学生社团信息管理系统"
+        }
+        // 添加晴天酒店默认登录页
+        if (hostname == "hoteladmin.hopecent.com") {
+          // 用这种方式，每个系统，可以写一个对应的专属登录页，根据需求选择是否写晴天酒店的登录页
+          // homePath = '/user/login-dgqt';
+          title = "东莞情天酒店管理系统"
+        }
+        // 添加亿安达默认登录页
+        if (hostname == "yianda.futurestack.cn") {
+          // 用这种方式，每个系统，可以写一个对应的专属登录页，根据需求选择是否写晴天酒店的登录页
+          // homePath = '/user/login-dgqt';
+          title = "亿安达消防教务云"
+        }
+        
+        if(title!=""){ localStorage.setItem("title",title) }
+  
+        if(homePath != window.location.pathname){ // 当项目首页与默认首页不同，再跳转至项目首页
+          localStorage.setItem('loginPath', homePath) // 用于系统logout()跳转
+          window.location.href = homePath;
+        }
+      }
+    </script>
+    <!-- End of Multi-Site HomePage Detect -->
+   
+  <meta charset="utf-8">
+  <title>后端管理系统</title>
+  <base href="/">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <!-- 引入 Bootstrap -->
+  <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+</head>
+<body>
+  <app-root></app-root>
+  <script src="assets/js/parse.min.js"></script>
+  <script src="assets/js/plupload.full.min.js"></script>
+  <script src="assets/js/qiniu.min.js"></script>
+  <!-- jQuery (Bootstrap 的 JavaScript 插件需要引入 jQuery) -->
+  <!-- <script src="https://code.jquery.com/jquery.js"></script>-->
+  <script src="assets/js/jquery.min.js"></script>
+   
+  <script src="assets/js/FileSaver.js"></script>
+  <script src="assets/js/jquery.wordexport.js"></script>
+  <!-- 包括所有已编译的插件 -->
+  <!-- <script src="assets/js/bootstrap.min.js"></script> -->
+  <!-- 引入 ECharts 文件 -->
+  <script src="assets/js/echarts.min.js"></script>
+  <!-- 引入xlsx表格读取 -->
+  <script src="assets/js/xlsx.js"></script>
+
+</body>
+</html>

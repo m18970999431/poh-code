@@ -1,0 +1,416 @@
+<nz-layout>
+    <nz-page-header> 
+        <nz-page-header-title>{{dataSource.Pobject?(dataSource.Pobject|showName)+" > ":""}}{{Schema?Schema.name:""}}管理</nz-page-header-title>
+        <nz-page-header-subtitle *ngIf="!dataSource.Pobject">{{Schema?Schema.desc:""}}</nz-page-header-subtitle>
+        
+        <nz-page-header-extra>
+          <!-- 条件搜索区域 -->
+            <nz-input-group nzCompact *ngIf="getSchemaType().length>0">
+                <nz-select (ngModelChange)="typeChange($event)">
+                  <nz-option *ngFor="let type of getSchemaType()" [nzLabel]="type" [nzValue]="type"></nz-option>
+                </nz-select>
+            </nz-input-group>
+
+            <div style="display: inline-block;width:350px;">
+              <nz-input-group nzCompact>
+                  <nz-select [(ngModel)]="dataSource.searchColName">
+                    <nz-option *ngFor="let key of displayedColumns" [nzLabel]="fields[key].name" [nzValue]="key"></nz-option>
+                  </nz-select>
+                  <input #filter type="text" nz-input placeholder="请输入搜索内容" style="width:auto;" />
+                  <ng-template #suffixButton>
+                      <button nz-button nzType="danger" nzSearch>重置</button>
+                  </ng-template>
+                </nz-input-group>
+            </div>
+
+          <!-- 功能按钮区域 -->
+            <button nz-button  nzType="danger" (click)="reset()">
+                <i nz-icon type="redo"></i>重置
+            </button>
+            <!-- <button nz-button nzType="default"><i nz-icon type="search"></i>Search</button> -->
+            <!-- <button nz-button nzType="default"><i nz-icon type="sync"></i>刷新</button> -->
+            <button nz-button nzType="primary"  *ngIf="Schema&&getSchemaType().length==0" (click)="showEditModal()">
+              <i nz-icon type="plus-circle"></i>添加{{Schema.name}}
+            </button>
+            <!-- <button nz-button nzType="default"  (click)="batchImport()">
+                <i nz-icon type="plus-circle"></i>批量导入
+            </button> -->
+          </nz-page-header-extra>
+    </nz-page-header>
+<nz-content>
+
+    <nz-table
+      #rowSelectionTable
+      nzShowPagination
+      nzShowSizeChanger
+      [nzData]="dataSource.listOfDisplayData"
+      (nzCurrentPageDataChange)="currentPageDataChange($event)"
+      [nzPageIndex]="dataSource.pageIndex"
+      (nzPageIndexChange)="pageIndexChanged($event)"
+    >
+      <thead>
+        <tr>
+          <ng-container *ngFor="let i=index;let key of displayedColumns">
+            <th [nzAlign]="i==0?'center':'left'" nzShowSort (nzSortChange)="sortData(key,$event)" [(nzSort)]="dataSource.sortState[key]">
+                <p style="float:left;">{{fields[key].name?fields[key].name:key}}</p>
+            </th>
+          </ng-container>
+        <th [nzAlign]="'center'" nzWidth="160px">操作</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <ng-container *ngFor="let data of rowSelectionTable.data">
+        <!-- Start of 父级数据显示-->
+        <tr common-list-item 
+        [data]="data" 
+        [dataSource]="dataSource" 
+        [detailTitle]="detailTitle"
+        [fields]="fields"
+        [type]="dataSource.equalTo['type']"
+        [displayedColumns]="displayedColumns"
+        [displayedOperators]="displayedOperators"
+        (operate)="operatorChange($event,data)"
+        ></tr>
+
+        <ng-container *ngFor="let childdata1 of dataSource.listOfChildData[data.id]">
+            <!-- 显示有父级且父级展开的数据 || 显示无父级数据 -->
+            <tr common-list-item 
+            *ngIf="(childdata1.get('parent') && dataSource.mapOfChildrenExpanded[childdata1.get('parent').id]) || !childdata1.get('parent')"
+            [data]="childdata1" 
+            [dataSource]="dataSource" 
+            [detailTitle]="detailTitle"
+            [fields]="fields"
+            [displayedColumns]="displayedColumns"
+            [displayedOperators]="displayedOperators"
+            (operate)="operatorChange($event,childdata1)"
+            ></tr>
+
+            <ng-container *ngFor="let childdata2 of dataSource.listOfChildData[childdata1.id]">
+                <!-- 显示有父级且父级展开的数据 || 显示无父级数据 -->
+                <tr common-list-item 
+                *ngIf="(childdata2.get('parent') && dataSource.mapOfChildrenExpanded[childdata2.get('parent').id]) || !childdata2.get('parent')"
+                [data]="childdata2" 
+                [dataSource]="dataSource" 
+                [detailTitle]="detailTitle"
+                [fields]="fields"
+                [displayedColumns]="displayedColumns"
+                [displayedOperators]="displayedOperators"
+                (operate)="operatorChange($event,childdata2)"
+                ></tr>
+            </ng-container>
+        </ng-container>
+        <!-- End of 父级数据显示-->
+        </ng-container>
+      </tbody>
+    </nz-table>
+</nz-content>
+</nz-layout>
+
+
+
+
+
+<!-- ************************************************************************************************ -->
+<!-- ************************************************************************************************ -->
+
+<nz-drawer 
+  [(nzVisible)]="isVisibleEditModal" 
+  [nzBodyStyle]="{ height: 'calc(100% - 55px)', overflow: 'auto', 'padding-bottom': '53px' }"
+  [nzMaskClosable]="false"
+  [nzWidth]="720"
+  nzTitle="{{Schema?Schema.name:''}}信息" 
+  (nzOnClose)="editModalCanceled()"
+  >
+  <style>
+    .footer {
+      position: absolute;
+      bottom: 0px;
+      width: 100%;
+      border-top: 1px solid rgb(232, 232, 232);
+      padding: 10px 16px;
+      text-align: right;
+      left: 0px;
+      background: #fff;
+    }
+  </style>
+
+<form nz-form>
+  <div nz-row nzGutter="8">
+    <ng-container *ngFor="let key of fieldsKeys">
+      <!-- 遍历所有非隐藏Schema字段 -->
+      <ng-container *ngIf="checkShow(Schema.fields[key].show)">
+          <ng-container [ngSwitch]="checkView(Schema.fields[key].view)">
+            <div nz-col [nzSpan]="Schema.fields[key].col?Schema.fields[key].col:12">
+              <!-- 判断属性编辑控件 -->
+
+              <!-- 文本框编辑 -->
+              <ng-container *ngSwitchCase="'textarea'">
+                <nz-form-item *ngIf="Schema.fields[key].type == 'String' ">
+                    <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                    <nz-form-control>
+                      <textarea
+                        nz-input
+                        placeholder="请填写{{Schema.fields[key].name}}"
+                        [(ngModel)]="object[key]" [ngModelOptions]="{standalone: true}"
+                        [nzAutosize]="{ minRows: 6, maxRows: 6 }"
+                      ></textarea>
+                      <ng-container *ngIf="Schema.fields[key].desc">
+                        <br><span style="margin-left:7px;color:#AAA;font-size:9px;">{{Schema.fields[key].desc}}</span>
+                        </ng-container>
+                    </nz-form-control>
+                  </nz-form-item>
+              </ng-container>
+
+              <!-- 文本框编辑 TinyMCE -->
+              <ng-container *ngSwitchCase="'editor-tinymce'">
+                  <nz-form-item>
+                      <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                      <nz-form-control>
+                        <!-- init 参考：https://www.tiny.cloud/docs/configure/integration-and-setup/ -->
+                        <editor apiKey="drlv7o0zimw546sfwwkd47pmnyzamlv2vky9bfxbinuxv73a" [(ngModel)]="object[key]" [ngModelOptions]="{standalone: true}"
+                        [init]="{
+                            plugins: 'link lists advlist preview fullscreen',
+                            toolbar: 'undo redo | bold italic | bullist numlist outdent indent | preview fullscreen',
+                            language : 'zh_CN',
+                            language_url : '/assets/js/tinymce/langs/zh_CN.js',
+                            menubar: false,
+                            statusbar: false,
+                            base_url: '/assets/js/tinymce/'
+                          }"
+                        ></editor>
+
+                      </nz-form-control>
+                    </nz-form-item>
+                </ng-container>
+              
+              <!-- 仅展示不可编辑 -->
+              <ng-container *ngSwitchCase="'just-show'">
+                  <nz-form-item *ngIf="Schema.fields[key].type == 'String' ">
+                      <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                      <nz-form-control>
+                          <input nz-input [disabled]="true" [(ngModel)]="object[key]" [ngModelOptions]="{standalone: true}" />
+                          <ng-container *ngIf="Schema.fields[key].desc">
+                            <br><span style="margin-left:7px;color:#AAA;font-size:9px;">{{Schema.fields[key].desc}}</span>
+                            </ng-container>
+                        </nz-form-control>
+                    </nz-form-item>
+              </ng-container>
+
+              <!-- 日期范围编辑 -->
+              <ng-container *ngSwitchCase="'date-from-to'">
+                  <nz-form-item>
+                      <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                      <nz-form-control>
+                        <nz-range-picker
+                        [(ngModel)]="selectedDateRange[key]"  [ngModelOptions]="{standalone: true}"
+                        (ngModelChange)="onDateRangePickerChange($event,object,key)"
+                        ></nz-range-picker>
+                        <ng-container *ngIf="Schema.fields[key].desc">
+                          <br><span style="margin-left:7px;color:#AAA;font-size:9px;">{{Schema.fields[key].desc}}</span>
+                          </ng-container>
+                      </nz-form-control>
+                    </nz-form-item>
+              </ng-container>
+
+              <!-- 日期范围列表编辑 -->
+              <ng-container *ngSwitchCase="'period-from-to'">
+                  <nz-form-item>
+                      <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}<button (click)="addPeriod(object,key)" nz-button nzType="default">添加时间段</button></nz-form-label>
+                      <ng-container *ngFor="let period of object[key]">
+                        <nz-form-control [nzSpan]="24">
+                              周目：
+                              <nz-select style="width: 120px;" nzPlaceHolder="请选择日期" [(ngModel)]="period.day" [ngModelOptions]="{standalone: true}">
+                                  <nz-option *ngFor="let option of weekdays"  [nzLabel]="option.label" [nzValue]="option.value"> </nz-option>
+                              </nz-select>
+                              时段：
+                              <nz-time-picker nzFormat="HH:mm" [nzMinuteStep]="15" nzPlaceHolder="选择开始时间" [(ngModel)]="period.timeFrom" [ngModelOptions]="{standalone: true}"></nz-time-picker>
+                              -
+                              <nz-time-picker nzFormat="HH:mm" [nzMinuteStep]="15" nzPlaceHolder="选择结束时间" [(ngModel)]="period.timeTo" [ngModelOptions]="{standalone: true}"></nz-time-picker>
+                              人数：
+                              <input style="width: 120px;" type="number" nz-input placeholder="请输入人数" [(ngModel)]="period.peopleMax" [ngModelOptions]="{standalone: true}" />
+                        </nz-form-control>
+                    </ng-container>
+                    </nz-form-item>
+                </ng-container>
+
+              <!-- 密码编辑 -->
+              <ng-container *ngSwitchCase="'edit-password'">
+                <nz-form-item>
+                    <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                    <nz-form-control>
+                      <!-- <span nz-input [disabled]="true">********</span> -->
+                      <input nz-input [disabled]="ture" [(ngModel)]="object[key]" [ngModelOptions]="{standalone: true}" />
+                      </nz-form-control>
+                  </nz-form-item>
+            </ng-container>
+
+            <!-- 选项选择：单选 -->
+            <ng-container *ngSwitchCase="'edit-select'">
+              <nz-form-item>
+                  <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                  <nz-form-control>
+                    <nz-radio-group [(ngModel)]="object[key]" nzName="radiogroup" [ngModelOptions]="{standalone: true}">
+                        <label *ngFor="let option of Schema.fields[key].options" nz-radio [nzValue]="option.value">{{option.label}}</label>
+                    </nz-radio-group>
+                  </nz-form-control>
+                </nz-form-item>
+            </ng-container>
+
+            <!-- 问卷编辑：选项编辑 -->
+            <ng-container *ngSwitchCase="'edit-survey-options'">
+                <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                <nz-form-control>
+                  <ng-container *ngFor="let option of object[key];let i = index">
+                      <nz-input-group
+                      [nzAddOnBefore]="numButton"
+                      [nzAddOnAfter]="suffixButton"
+                      nzSearch nzSize="default">
+                      <input type="text" nz-input placeholder="请输入选项内容" [(ngModel)]="option.value" [ngModelOptions]="{standalone: true}" />
+                      </nz-input-group>
+                      <ng-template #numButton>
+                          <button [style.color]="option.check?'blue':'red'" (click)="deleteOption(object[key],i)" nz-button nzType="link" nzShape="circle"><i nz-icon nzType="close-circle"></i></button>
+                          <span [style.color]="option.check?'blue':'red'">选项{{getItemNum(i)}}</span>
+                      </ng-template>
+                      <ng-template #suffixButton>
+                      <button (click)="setCheck(object[key],i,true)" *ngIf="!option.check" nz-button nzType="danger" nzSize="default" nzSearch>设为正确</button>
+                      <button *ngIf="option.check" nz-button nzType="primary" nzSize="default" nzSearch>正确答案</button>
+                      </ng-template>
+                  </ng-container>
+                  
+                  <button *ngIf="this.object[key]&&this.object[key].length <= 7" (click)="addOption(object[key])" nz-button nzType="default">添加选项</button>
+
+                </nz-form-control>
+              </ng-container>
+  
+              <ng-container *ngSwitchDefault>
+                  <!-- 字符串编辑 -->
+                  <nz-form-item *ngIf="Schema.fields[key].type == 'String' ">
+                    <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                    <nz-form-control>
+                        <input nz-input placeholder="请填写{{Schema.fields[key].name}}" [(ngModel)]="object[key]" [disabled]="Schema.fields[key].disabled" [ngModelOptions]="{standalone: true}" />
+                      <ng-container *ngIf="Schema.fields[key].desc">
+                        <br><span style="margin-left:7px;color:#AAA;font-size:9px;">{{Schema.fields[key].desc}}</span>
+                        </ng-container>
+                      </nz-form-control>
+                  </nz-form-item>
+
+                  <!-- 数字编辑 -->
+                  <nz-form-item *ngIf="Schema.fields[key].type == 'Number' ">
+                      <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                      <nz-form-control>
+                          <input type="number" nz-input placeholder="请输入数字" [(ngModel)]="object[key]" [disabled]="Schema.fields[key].disabled" [ngModelOptions]="{standalone: true}" />
+                        <ng-container *ngIf="Schema.fields[key].desc">
+                          <br><span style="margin-left:7px;color:#AAA;font-size:9px;">{{Schema.fields[key].desc}}</span>
+                          </ng-container>
+                        </nz-form-control>
+                  </nz-form-item>
+
+                  <!-- 地图定位编辑 -->
+                  <nz-form-item *ngIf="Schema.fields[key].type == 'GeoPoint' ">
+                    <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                    <nz-form-control>
+                        <button nz-button nzType="primary" (click)="showModalAmap()">选择位置</button>
+                        <ng-container>
+                          <br><span style="margin-left:7px;color:#AAA;font-size:9px;">{{object['address']}}</span>
+                          </ng-container>
+                      </nz-form-control>
+                  </nz-form-item>
+
+                  <!-- 日期编辑：年月日 -->
+                  <nz-form-item *ngIf="Schema.fields[key].type == 'Date' ">
+                      <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                      <nz-form-control>
+                        <nz-date-picker [(ngModel)]="object[key]" [ngModelOptions]="{standalone: true}"></nz-date-picker>
+                        <ng-container *ngIf="Schema.fields[key].desc">
+                          <br><span style="margin-left:7px;color:#AAA;font-size:9px;">{{Schema.fields[key].desc}}</span>
+                          </ng-container>
+                      </nz-form-control>
+                    </nz-form-item>
+                  <!-- 标签编辑：新增、多选 -->
+                  <nz-form-item *ngIf="Schema.fields[key].type == 'Array' ">
+                    <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                    <nz-form-control>
+                      <nz-select nzMode="tags" style="width: 100%;" nzPlaceHolder="请输入标签" [(ngModel)]="object[key]" [ngModelOptions]="{standalone: true}">
+                        <ng-container *ngIf="!Schema.fields[key].options">
+                          <nz-option *ngFor="let option of object[key]" [nzLabel]="option" [nzValue]="option"> </nz-option>
+                        </ng-container>
+                        <ng-container *ngIf="Schema.fields[key].options">
+                          <nz-option *ngFor="let option of Schema.fields[key].options" [nzLabel]="option.label" [nzValue]="option.value"> </nz-option>
+                        </ng-container>
+                      </nz-select>
+                    </nz-form-control>
+                  </nz-form-item>
+                    
+  
+  
+                  <nz-form-item *ngIf="Schema.fields[key].type == 'Pointer' ">
+                      <nz-form-label [nzRequired]="Schema.fields[key].required?true:false">{{Schema.fields[key].name}}</nz-form-label>
+                      <nz-form-control>
+                          <!-- 当有指针筛选条件时，固定指针指向对象，不可进行选择 -->
+                          <nz-select
+                            nzShowSearch
+                            nzAllowClear
+                            nzPlaceHolder="{{object[key] | showName}}"
+                            [nzDisabled]="Schema.fields[key].targetClass == dataSource.PclassName"
+                            [(ngModel)]="object[key]"
+                            [ngModelOptions]="{standalone: true}"
+                            (nzOpenChange)="searchPointer(key)"
+                          >
+                            <nz-option *ngIf="dataSource.Pobject" [nzDisabled]="true" [nzLabel]="dataSource.Pobject | showName" [nzValue]="dataSource.Pobject"></nz-option>
+                            <nz-option *ngIf="object[key]" [nzDisabled]="true" [nzLabel]="object[key] | showName" [nzValue]="object[key]"></nz-option>
+                            <nz-option *ngFor="let p of selectPointerList" [nzLabel]="p | showName" [nzValue]="p"></nz-option>
+                          </nz-select>
+                          <ng-container *ngIf="Schema.fields[key].desc">
+                            <br><span style="margin-left:7px;color:#AAA;font-size:9px;">{{Schema.fields[key].desc}}</span>
+                            </ng-container>
+                        </nz-form-control>
+                  </nz-form-item>
+                  
+  
+              </ng-container>
+            </div>
+          </ng-container>
+      </ng-container>
+      <!-- end of ngIf -->
+    </ng-container>
+  <!-- end of ngFor -->
+    
+  </div>
+</form>
+<div class="footer">
+  <button type="button" (click)="editModalCanceled()" class="ant-btn" style="margin-right: 8px;"><span>取消</span></button>
+  <button type="button" (click)="editModalOK()" class="ant-btn ant-btn-primary"><span>保存</span></button>
+</div>
+</nz-drawer>
+<!-- </nz-modal> -->
+
+
+
+
+
+
+
+<!-- ************************************************************************************************ -->
+<!-- ************************************************************************************************ -->
+
+<nz-modal
+      nzWrapClassName="vertical-center-modal"
+      [(nzVisible)]="isVisibleAmap"
+      nzTitle="地图选点"
+      (nzOnCancel)="handleCancelAmap()"
+      (nzOnOk)="handleOkAmap()"
+      nzWidth="900"
+    >
+      <nz-input-group nzSearch nzSize="large" [nzAddOnAfter]="suffixButton">
+        <input [(ngModel)]="amapInput" type="text" nz-input placeholder="请输入目标点地址" />
+      </nz-input-group>
+      <ng-template #suffixButton>
+        <button nz-button nzType="primary" nzSize="large" nzSearch (click)="searchAmap()">搜索</button>
+      </ng-template>
+      
+      <div class="relative">
+        <div id="panel"></div>
+        <ngx-amap class="demo-map-lg" [resizeEnable]="true" (ready)="onMapReady($event)"></ngx-amap>
+      </div>
+    </nz-modal>

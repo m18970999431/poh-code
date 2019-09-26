@@ -1,0 +1,155 @@
+/* 日历相关样式 */
+@import '~dhtmlx-scheduler/codebase/dhtmlxscheduler.css';
+// @import '~dhtmlx-scheduler/codebase/dhtmlxscheduler_material.css';
+
+/* 甘特图相关样式 */
+@import "../node_modules/dhtmlx-gantt/codebase/dhtmlxgantt.css";
+
+// 全局-修复甘特图干扰样式
+.gantt_task_line{ // 去除任务边框
+  border:none;
+  background-color:#DDD
+}
+.gantt_task_content{ // 字体颜色继承
+  color:inherit;
+}
+
+// 表格列：周末列采用浅灰色衬底
+.gantt-column-weekend{ 
+  background: #F4F4F4 !important;
+}
+
+// 任务类型：父节点样式
+.gantt-task-parent{
+  background: #F4F4F4 !important;
+  color:#000 !important;
+  border-left:1px #000 dashed;
+  border-right:1px #000 dashed;
+}
+
+// 任务类型：所属类型样式
+.gantt-cate-requirement{  // 需求
+  background:#C5E1A5!important;
+}
+.gantt-cate-requirement .gantt_task_progress{
+  background:#8BC34A!important;
+}
+.gantt-cate-frontend{     // 前端
+  background:#80DEEA!important;
+}
+.gantt-cate-frontend .gantt_task_progress{
+  background:#00BCD4!important;
+}
+.gantt-cate-backend{     // 数据
+  background:#FFECB3!important;
+}
+.gantt-cate-backend .gantt_task_progress{
+  background:#FFC107!important;
+}
+.gantt-cate-design{     // 设计
+  background:#F48FB1!important;
+}
+.gantt-cate-design .gantt_task_progress{
+  background:#E91E63!important;
+}
+.gantt-cate-testing{     // 测试
+  background:#BCAAA4!important;
+  color:#FFF;
+}
+.gantt-cate-testing .gantt_task_progress{
+  background:#795548!important;
+}
+
+// 任务类型：优先级样式
+.gantt-priority-low{
+  // border-top: 3px rgb(121, 179, 35) solid;
+}
+.gantt-priority-normal{
+  border-top: 3px #1890ff solid;
+}
+.gantt-priority-high{
+  border-top: 3px rgb(184, 31, 31) solid;
+}
+
+/* You can add global styles to this file, and also import other style files */
+html,
+body,
+div,
+span,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+address,
+big,
+cite,
+code,
+del,
+em,
+img,
+ins,
+small,
+strong,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend {
+  margin: 0px;
+  padding: 0px;
+}
+
+// 表格不被撑开
+table {
+  table-layout: fixed;
+  word-wrap: break-word;
+}
+td{
+    overflow: hidden;
+}
+
+.box {
+  min-height: calc(100% - 70px);
+  padding: 15px;
+}
+  .tit{
+    height: 16px;
+    line-height: 16px;
+    margin-bottom: 16px;
+    padding-left: 8px;
+    border-left: 2px solid #44abf7;
+ }
+
+ // 操作
+.caozhuo{
+  >span{
+     margin: 0 3px;
+     padding: 3px;
+     border: 1px solid #ccc;
+     color: #888;
+  }
+  span:hover{
+     // margin: 0 3px;
+     // padding: 3px;
+     // border: 1px solid #ccc;
+     // color: #888;
+     background: #ddd;
+  }
+}

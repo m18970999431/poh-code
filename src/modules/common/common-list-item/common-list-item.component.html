@@ -1,0 +1,105 @@
+<!-- Start of 单行数据显示-->
+        <!-- <td 
+        [nzIndentSize]="getLevelIndentSize()"
+        [nzShowExpand]="dataSource.mapOfChildrenNode[data.id]" 
+        [(nzExpand)]="dataSource.mapOfChildrenExpanded[data.id]"
+        nzWidth="40px"
+        ></td> -->
+        <!-- 数据单行显示区域 -->
+        <ng-container *ngFor="let key of displayedColumns; let i=index;">
+          <td 
+          [style.paddingLeft]="getLevelPadding(key)"
+          [nzShowExpand]="getShowExpand(key)" 
+          [(nzExpand)]="dataSource.mapOfChildrenExpanded[data.id]"
+          [nzAlign]="'left'"
+          [ngSwitch]="fields[key].type" 
+          [style.color]="fields[key].color?fields[key].color:'black'">
+
+              <ng-container *ngSwitchCase="'Boolean'">
+                <ng-container *ngIf="!fields[key].view">
+                  <nz-switch
+                    [ngModel]="data.get(key)"
+                    [nzCheckedChildren]="checkedTemplate"
+                    [nzUnCheckedChildren]="unCheckedTemplate"
+                    (ngModelChange)="toggleSwitch($event,data,key)"
+                  ></nz-switch>
+                  <ng-template #checkedTemplate><i nz-icon type="check"></i></ng-template>
+                  <ng-template #unCheckedTemplate><i nz-icon type="close"></i></ng-template>
+                </ng-container>
+                <ng-container *ngIf="fields[key].view == 'schema-status'">
+                </ng-container>
+              </ng-container>
+
+              <ng-container *ngSwitchCase="'Pointer'">
+                <ng-container *ngIf="data.get(key)">
+                {{data.get(key) | showName}}
+                </ng-container>
+              </ng-container>
+
+              <ng-container *ngSwitchCase="'Date'">
+                {{data.get(key) | date:"y-MM-dd"}}
+              </ng-container>
+
+              <ng-container *ngSwitchCase="'Array'">
+                <ng-container *ngIf="!fields[key].view">
+                  <ng-container *ngFor="let tag of data.get(key)" >
+                    <nz-tag [nzColor]="'#108ee9'">{{tag}}</nz-tag>
+                  </ng-container>
+                </ng-container>
+                <img *ngIf="fields[key].view == 'edit-image'" src="{{(data.get(key) | showImgPipe)+'?imageView2/0/w/200'}}">
+              </ng-container>
+
+              <ng-container *ngSwitchDefault>
+                <ng-container *ngIf="!fields[key].view">
+                  {{data.get(key)}}
+                </ng-container>
+
+                <ng-container *ngIf="fields[key].view == 'textarea'">
+                    {{data.get(key)}}
+                </ng-container>
+
+                <ng-container *ngIf="fields[key].view == 'date-from-to'">
+                  <ng-container *ngIf="data.get(key)">
+                      <nz-date-picker [ngModel]="data.get(key).from" nzDisabled [nzSize]="'small'"></nz-date-picker>
+                      <br />
+                      <nz-date-picker [ngModel]="data.get(key).to" nzDisabled [nzSize]="'small'"></nz-date-picker>
+                  </ng-container>
+                  <ng-container *ngIf="!data.get(key)">暂未设置</ng-container>
+                </ng-container>
+              </ng-container>
+              <ng-container *ngIf="fields[key].view == 'edit-password'">
+                ********
+              </ng-container>
+              <ng-container *ngIf="fields[key].view == 'edit-select'">
+                  {{getOptsLabel(key,data.get(key))}}
+              </ng-container>
+
+              <ng-container *ngIf="i == 0 && fields['parent']">
+                  <button nz-button [nzSize]="size" nzType="link" (click)="operatorChange(data,'newchild')">
+                    <i nz-icon nzType="plus-square" nzTheme="outline"></i>
+                  </button>
+                  
+              </ng-container>
+              <ng-container *ngIf="i == 0 && (type == 'article')">
+                <button nz-button [nzSize]="size" nzType="link" (click)="operatorChange(data,'detail')">管理文章</button>
+              </ng-container>
+          </td>
+        </ng-container>
+
+        <!-- 数据单行操作区域 -->
+        <td [nzAlign]="'right'">
+
+                <button nzType="primary" *ngIf="isOperatorEnabled('detail')" (click)="operatorChange(data,'detail')" nz-button [nzSize]="'small'">
+                    <i nz-icon type="search"></i>
+                    {{detailTitle?detailTitle:"详情"}}
+                </button>
+                <button nzType="default" *ngIf="isOperatorEnabled('edit')" (click)="operatorChange(data,'edit')" nz-button [nzSize]="'small'">
+                    <i nz-icon type="edit"></i>
+                    编辑
+                </button>
+                <button nzType="danger" nz-button [nzSize]="'small'" *ngIf="isOperatorEnabled('delete')" (click)="operatorChange(data,'delete')">
+                    <i nz-icon type="delete"></i>
+                    删除
+                </button>
+        </td>
+    <!-- End of 单行数据显示-->
